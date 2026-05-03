@@ -1,0 +1,119 @@
+# Dependencies
+node_modules/
+pnpm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+.vim/
+.emacs.desktop
+.emacs.desktop.lock
+*.orig
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Package manager
+pnpm-lock.yaml.backup
+yarn.lock.backup
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+lerna-debug.log*
+
+# Misc
+.cache/
+.turbo/
+.eslintcache
+.prettier-ignore
+.husky/_
+*.tgz
+dist-ssr/
+.vercel
+.output
+.nuxt
+
+# Local development
+.replit
+.replit-artifact/
+*.replit-artifact/
+
+# Vite
+.vite/
+
+# Temporary files
+*.tmp
+*.temp
+.tmpdir/
+
+# IDEs - Local history
+.history/
+.vscode-test
+.vscode/settings.json
+.vscode/extensions.json
+
+# MonoRepo specific
+.pnp
+.pnp.js
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# TypeScript
+*.js.map
+*.d.ts.map
+*replit.md
+
+# Project specific ignores
+attached_assets/
+.sixth/
+.gemini/
