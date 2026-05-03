@@ -1,0 +1,1654 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: MedStock AI - Hospital Supply Chain Intelligence Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Dashboard summary and KPIs
+  - name: inventory
+    description: Inventory management
+  - name: skus
+    description: SKU catalog management
+  - name: forecasts
+    description: AI demand forecasting
+  - name: expiry
+    description: Expiry and wastage management
+  - name: alerts
+    description: System alerts
+  - name: crisis
+    description: Crisis coordination panel
+  - name: departments
+    description: Department management
+  - name: hospitals
+    description: Hospital and network management
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # Dashboard
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard KPI summary
+      description: Returns aggregated KPIs for the admin dashboard
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/stock-by-status:
+    get:
+      operationId: getStockByStatus
+      tags: [dashboard]
+      summary: Get stock counts grouped by traffic-light status
+      responses:
+        "200":
+          description: Stock status breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockStatusBreakdown"
+
+  /dashboard/alerts-feed:
+    get:
+      operationId: getAlertsFeed
+      tags: [dashboard]
+      summary: Get recent alerts feed for dashboard
+      responses:
+        "200":
+          description: Recent alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /dashboard/wastage-trend:
+    get:
+      operationId: getWastageTrend
+      tags: [dashboard]
+      summary: Get monthly wastage cost trend (last 6 months)
+      responses:
+        "200":
+          description: Wastage trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WastageTrendPoint"
+
+  # Departments
+  /departments:
+    get:
+      operationId: listDepartments
+      tags: [departments]
+      summary: List all departments
+      responses:
+        "200":
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Department"
+    post:
+      operationId: createDepartment
+      tags: [departments]
+      summary: Create a department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentBody"
+      responses:
+        "201":
+          description: Department created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+
+  /departments/{id}:
+    get:
+      operationId: getDepartment
+      tags: [departments]
+      summary: Get a department by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Department
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+
+  # SKUs
+  /skus:
+    get:
+      operationId: listSkus
+      tags: [skus]
+      summary: List all SKUs
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [critical, low, adequate]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: expiryWithinDays
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of SKUs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sku"
+    post:
+      operationId: createSku
+      tags: [skus]
+      summary: Create a new SKU
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSkuBody"
+      responses:
+        "201":
+          description: SKU created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sku"
+
+  /skus/{id}:
+    get:
+      operationId: getSku
+      tags: [skus]
+      summary: Get a single SKU by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SKU detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sku"
+    put:
+      operationId: updateSku
+      tags: [skus]
+      summary: Update a SKU
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSkuBody"
+      responses:
+        "200":
+          description: SKU updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sku"
+    delete:
+      operationId: deleteSku
+      tags: [skus]
+      summary: Delete a SKU
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /skus/{id}/movement-history:
+    get:
+      operationId: getSkuMovementHistory
+      tags: [skus]
+      summary: Get stock movement history for a SKU
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Movement history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockMovement"
+
+  # Inventory
+  /inventory:
+    get:
+      operationId: listInventory
+      tags: [inventory]
+      summary: Get full inventory with real-time stock levels
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [critical, low, adequate]
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Inventory list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/update-stock:
+    post:
+      operationId: updateStock
+      tags: [inventory]
+      summary: Update stock quantity for a SKU (consumption or receipt)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStockBody"
+      responses:
+        "200":
+          description: Stock updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/categories:
+    get:
+      operationId: listCategories
+      tags: [inventory]
+      summary: List all unique item categories
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # Forecasts
+  /forecasts:
+    get:
+      operationId: listForecasts
+      tags: [forecasts]
+      summary: List demand forecasts
+      parameters:
+        - name: skuId
+          in: query
+          schema:
+            type: integer
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: horizon
+          in: query
+          schema:
+            type: integer
+            enum: [30, 60, 90]
+      responses:
+        "200":
+          description: List of forecasts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Forecast"
+
+  /forecasts/run:
+    post:
+      operationId: runForecasts
+      tags: [forecasts]
+      summary: Trigger forecast computation for all SKUs
+      responses:
+        "200":
+          description: Forecast job result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForecastJobResult"
+
+  /forecasts/{skuId}:
+    get:
+      operationId: getSkuForecast
+      tags: [forecasts]
+      summary: Get forecast for a specific SKU
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SKU forecast with all horizons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkuForecastDetail"
+
+  /forecasts/{skuId}/override:
+    post:
+      operationId: overrideForecast
+      tags: [forecasts]
+      summary: Override a forecast with manual adjustment
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForecastOverrideBody"
+      responses:
+        "200":
+          description: Forecast overridden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forecast"
+
+  # Expiry & Wastage
+  /expiry/items:
+    get:
+      operationId: listExpiryItems
+      tags: [expiry]
+      summary: List items nearing expiry
+      parameters:
+        - name: withinDays
+          in: query
+          schema:
+            type: integer
+            default: 90
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Items nearing expiry
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExpiryItem"
+
+  /expiry/wastage-report:
+    get:
+      operationId: getWastageReport
+      tags: [expiry]
+      summary: Get wastage report for current month
+      responses:
+        "200":
+          description: Wastage report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WastageReport"
+
+  /expiry/mark-resolved:
+    post:
+      operationId: markExpiryResolved
+      tags: [expiry]
+      summary: Mark an expiry item as returned/donated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkExpiryResolvedBody"
+      responses:
+        "200":
+          description: Expiry item resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpiryItem"
+
+  /expiry/redistribution-suggestions:
+    get:
+      operationId: getRedistributionSuggestions
+      tags: [expiry]
+      summary: Get redistribution suggestions for near-expiry stock
+      responses:
+        "200":
+          description: Redistribution suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RedistributionSuggestion"
+
+  # Alerts
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List all active alerts
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [low_stock, expiry, overstock, forecast]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, warning, info]
+        - name: resolved
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/{id}/resolve:
+    post:
+      operationId: resolveAlert
+      tags: [alerts]
+      summary: Mark an alert as resolved
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+
+  # Crisis Coordination
+  /crisis/surplus-listings:
+    get:
+      operationId: listSurplusListings
+      tags: [crisis]
+      summary: List surplus inventory available in the network
+      responses:
+        "200":
+          description: Surplus listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SurplusListing"
+    post:
+      operationId: createSurplusListing
+      tags: [crisis]
+      summary: Publish a surplus listing to the network
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSurplusListingBody"
+      responses:
+        "201":
+          description: Surplus listing created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurplusListing"
+
+  /crisis/requests:
+    get:
+      operationId: listCrisisRequests
+      tags: [crisis]
+      summary: List all critical item requests in the network
+      responses:
+        "200":
+          description: Crisis requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CrisisRequest"
+    post:
+      operationId: createCrisisRequest
+      tags: [crisis]
+      summary: Submit a critical item request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCrisisRequestBody"
+      responses:
+        "201":
+          description: Crisis request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrisisRequest"
+
+  /crisis/requests/{id}/update-status:
+    post:
+      operationId: updateCrisisRequestStatus
+      tags: [crisis]
+      summary: Update the status of a crisis request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCrisisStatusBody"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrisisRequest"
+
+  /crisis/matches:
+    get:
+      operationId: getCrisisMatches
+      tags: [crisis]
+      summary: Get AI-matched surplus-to-request pairs
+      responses:
+        "200":
+          description: Crisis matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CrisisMatch"
+
+  /crisis/mode:
+    get:
+      operationId: getCrisisMode
+      tags: [crisis]
+      summary: Get current crisis mode status
+      responses:
+        "200":
+          description: Crisis mode status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrisisModeStatus"
+    post:
+      operationId: toggleCrisisMode
+      tags: [crisis]
+      summary: Toggle crisis mode on/off
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleCrisisModeBody"
+      responses:
+        "200":
+          description: Crisis mode toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrisisModeStatus"
+
+  # Hospitals
+  /hospitals:
+    get:
+      operationId: listHospitals
+      tags: [hospitals]
+      summary: List all hospitals in the network
+      responses:
+        "200":
+          description: List of hospitals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Hospital"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    DeleteResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalSkus:
+          type: integer
+        criticalItems:
+          type: integer
+        lowItems:
+          type: integer
+        adequateItems:
+          type: integer
+        expiringWithin30Days:
+          type: integer
+        estimatedMonthlyWastageCost:
+          type: number
+        activeAlerts:
+          type: integer
+        forecastAccuracy:
+          type: number
+        stockoutIncidentsThisMonth:
+          type: integer
+        openCrisisRequests:
+          type: integer
+      required:
+        - totalSkus
+        - criticalItems
+        - lowItems
+        - adequateItems
+        - expiringWithin30Days
+        - estimatedMonthlyWastageCost
+        - activeAlerts
+        - forecastAccuracy
+        - stockoutIncidentsThisMonth
+        - openCrisisRequests
+
+    StockStatusBreakdown:
+      type: object
+      properties:
+        critical:
+          type: integer
+        low:
+          type: integer
+        adequate:
+          type: integer
+        byDepartment:
+          type: array
+          items:
+            type: object
+            properties:
+              departmentId:
+                type: integer
+              departmentName:
+                type: string
+              critical:
+                type: integer
+              low:
+                type: integer
+              adequate:
+                type: integer
+            required:
+              - departmentId
+              - departmentName
+              - critical
+              - low
+              - adequate
+      required:
+        - critical
+        - low
+        - adequate
+        - byDepartment
+
+    WastageTrendPoint:
+      type: object
+      properties:
+        month:
+          type: string
+        expiredValue:
+          type: number
+        nearExpiryRisk:
+          type: number
+      required:
+        - month
+        - expiredValue
+        - nearExpiryRisk
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        hospitalId:
+          type: integer
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - hospitalId
+        - createdAt
+
+    CreateDepartmentBody:
+      type: object
+      properties:
+        name:
+          type: string
+        hospitalId:
+          type: integer
+        description:
+          type: string
+      required:
+        - name
+        - hospitalId
+
+    Sku:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        unitCost:
+          type: number
+        supplier:
+          type: string
+        departmentId:
+          type: integer
+        departmentName:
+          type: string
+        currentStock:
+          type: number
+        reorderPoint:
+          type: number
+        safetyStock:
+          type: number
+        status:
+          type: string
+          enum: [critical, low, adequate]
+        nearestExpiryDate:
+          type: string
+          format: date
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - category
+        - unit
+        - unitCost
+        - departmentId
+        - departmentName
+        - currentStock
+        - reorderPoint
+        - safetyStock
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateSkuBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        unitCost:
+          type: number
+        supplier:
+          type: string
+        departmentId:
+          type: integer
+        currentStock:
+          type: number
+        reorderPoint:
+          type: number
+        safetyStock:
+          type: number
+      required:
+        - name
+        - category
+        - unit
+        - unitCost
+        - departmentId
+        - currentStock
+        - reorderPoint
+        - safetyStock
+
+    UpdateSkuBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        unit:
+          type: string
+        unitCost:
+          type: number
+        supplier:
+          type: string
+        currentStock:
+          type: number
+        reorderPoint:
+          type: number
+        safetyStock:
+          type: number
+
+    StockMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+        skuId:
+          type: integer
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [receipt, consumption, adjustment]
+        quantity:
+          type: number
+        runningTotal:
+          type: number
+        notes:
+          type: string
+          nullable: true
+      required:
+        - id
+        - skuId
+        - date
+        - type
+        - quantity
+        - runningTotal
+
+    InventoryItem:
+      type: object
+      properties:
+        skuId:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        departmentId:
+          type: integer
+        departmentName:
+          type: string
+        currentStock:
+          type: number
+        unit:
+          type: string
+        reorderPoint:
+          type: number
+        safetyStock:
+          type: number
+        status:
+          type: string
+          enum: [critical, low, adequate]
+        unitCost:
+          type: number
+        supplier:
+          type: string
+          nullable: true
+        nearestExpiryDate:
+          type: string
+          format: date
+          nullable: true
+        lastUpdated:
+          type: string
+          format: date-time
+      required:
+        - skuId
+        - name
+        - category
+        - departmentId
+        - departmentName
+        - currentStock
+        - unit
+        - reorderPoint
+        - safetyStock
+        - status
+        - unitCost
+        - lastUpdated
+
+    UpdateStockBody:
+      type: object
+      properties:
+        skuId:
+          type: integer
+        transactionType:
+          type: string
+          enum: [receipt, consumption, adjustment]
+        quantity:
+          type: number
+        notes:
+          type: string
+      required:
+        - skuId
+        - transactionType
+        - quantity
+
+    Forecast:
+      type: object
+      properties:
+        id:
+          type: integer
+        skuId:
+          type: integer
+        skuName:
+          type: string
+        departmentId:
+          type: integer
+        horizon:
+          type: integer
+          enum: [30, 60, 90]
+        predictedQuantity:
+          type: number
+        confidenceLow:
+          type: number
+        confidenceHigh:
+          type: number
+        isOverridden:
+          type: boolean
+        overrideValue:
+          type: number
+          nullable: true
+        overrideReason:
+          type: string
+          nullable: true
+        projectedStockoutDate:
+          type: string
+          format: date
+          nullable: true
+        generatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - skuId
+        - skuName
+        - departmentId
+        - horizon
+        - predictedQuantity
+        - confidenceLow
+        - confidenceHigh
+        - isOverridden
+        - generatedAt
+
+    SkuForecastDetail:
+      type: object
+      properties:
+        skuId:
+          type: integer
+        skuName:
+          type: string
+        currentStock:
+          type: number
+        forecasts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Forecast"
+        dailyPredictions:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              predicted:
+                type: number
+              low:
+                type: number
+              high:
+                type: number
+            required:
+              - date
+              - predicted
+              - low
+              - high
+        modelAccuracy:
+          type: number
+          nullable: true
+      required:
+        - skuId
+        - skuName
+        - currentStock
+        - forecasts
+        - dailyPredictions
+
+    ForecastJobResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        skusProcessed:
+          type: integer
+        message:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+      required:
+        - success
+        - skusProcessed
+        - message
+        - completedAt
+
+    ForecastOverrideBody:
+      type: object
+      properties:
+        horizon:
+          type: integer
+          enum: [30, 60, 90]
+        overrideValue:
+          type: number
+        reason:
+          type: string
+      required:
+        - horizon
+        - overrideValue
+        - reason
+
+    ExpiryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        skuId:
+          type: integer
+        skuName:
+          type: string
+        batchNumber:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        daysUntilExpiry:
+          type: integer
+        quantity:
+          type: number
+        unit:
+          type: string
+        unitCost:
+          type: number
+        estimatedLoss:
+          type: number
+        departmentId:
+          type: integer
+        departmentName:
+          type: string
+        supplier:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, resolved_returned, resolved_donated, expired]
+        urgency:
+          type: string
+          enum: [critical, high, medium, low]
+      required:
+        - id
+        - skuId
+        - skuName
+        - batchNumber
+        - expiryDate
+        - daysUntilExpiry
+        - quantity
+        - unit
+        - unitCost
+        - estimatedLoss
+        - departmentId
+        - departmentName
+        - status
+        - urgency
+
+    WastageReport:
+      type: object
+      properties:
+        month:
+          type: string
+        totalExpiredValue:
+          type: number
+        nearExpiryRiskValue:
+          type: number
+        percentageOfProcurement:
+          type: number
+        previousMonthExpiredValue:
+          type: number
+        changePercent:
+          type: number
+        byDepartment:
+          type: array
+          items:
+            type: object
+            properties:
+              departmentId:
+                type: integer
+              departmentName:
+                type: string
+              expiredValue:
+                type: number
+              nearExpiryRiskValue:
+                type: number
+            required:
+              - departmentId
+              - departmentName
+              - expiredValue
+              - nearExpiryRiskValue
+        overOrderedItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/OverOrderedItem"
+      required:
+        - month
+        - totalExpiredValue
+        - nearExpiryRiskValue
+        - percentageOfProcurement
+        - previousMonthExpiredValue
+        - changePercent
+        - byDepartment
+        - overOrderedItems
+
+    OverOrderedItem:
+      type: object
+      properties:
+        skuId:
+          type: integer
+        skuName:
+          type: string
+        currentStock:
+          type: number
+        projected90DayDemand:
+          type: number
+        excessQuantity:
+          type: number
+        excessValue:
+          type: number
+      required:
+        - skuId
+        - skuName
+        - currentStock
+        - projected90DayDemand
+        - excessQuantity
+        - excessValue
+
+    MarkExpiryResolvedBody:
+      type: object
+      properties:
+        expiryItemId:
+          type: integer
+        resolution:
+          type: string
+          enum: [returned, donated]
+        notes:
+          type: string
+      required:
+        - expiryItemId
+        - resolution
+
+    RedistributionSuggestion:
+      type: object
+      properties:
+        expiryItemId:
+          type: integer
+        skuName:
+          type: string
+        fromDepartment:
+          type: string
+        toDepartment:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        daysUntilExpiry:
+          type: integer
+        estimatedSaving:
+          type: number
+        reason:
+          type: string
+      required:
+        - expiryItemId
+        - skuName
+        - fromDepartment
+        - toDepartment
+        - quantity
+        - unit
+        - daysUntilExpiry
+        - estimatedSaving
+        - reason
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [low_stock, expiry, overstock, forecast]
+        severity:
+          type: string
+          enum: [critical, warning, info]
+        title:
+          type: string
+        message:
+          type: string
+        skuId:
+          type: integer
+          nullable: true
+        skuName:
+          type: string
+          nullable: true
+        departmentId:
+          type: integer
+          nullable: true
+        departmentName:
+          type: string
+          nullable: true
+        isResolved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - type
+        - severity
+        - title
+        - message
+        - isResolved
+        - createdAt
+
+    Hospital:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+        beds:
+          type: integer
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        isCurrentFacility:
+          type: boolean
+        crisisMode:
+          type: boolean
+      required:
+        - id
+        - name
+        - location
+        - beds
+        - isCurrentFacility
+        - crisisMode
+
+    SurplusListing:
+      type: object
+      properties:
+        id:
+          type: integer
+        hospitalId:
+          type: integer
+        hospitalName:
+          type: string
+        hospitalLocation:
+          type: string
+        skuName:
+          type: string
+        category:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+          nullable: true
+        pricePerUnit:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        validUntil:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [available, matched, fulfilled, expired]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - hospitalId
+        - hospitalName
+        - hospitalLocation
+        - skuName
+        - category
+        - quantity
+        - unit
+        - validUntil
+        - status
+        - createdAt
+
+    CreateSurplusListingBody:
+      type: object
+      properties:
+        skuName:
+          type: string
+        category:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        pricePerUnit:
+          type: number
+        notes:
+          type: string
+        validUntil:
+          type: string
+          format: date
+      required:
+        - skuName
+        - category
+        - quantity
+        - unit
+        - validUntil
+
+    CrisisRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        hospitalId:
+          type: integer
+        hospitalName:
+          type: string
+        hospitalLocation:
+          type: string
+        skuName:
+          type: string
+        category:
+          type: string
+        quantityNeeded:
+          type: number
+        unit:
+          type: string
+        urgency:
+          type: string
+          enum: [critical, high, medium]
+        status:
+          type: string
+          enum: [open, matched, confirmed, transfer_acknowledged, closed]
+        notes:
+          type: string
+          nullable: true
+        isPriority:
+          type: boolean
+        matchedSurplusId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - hospitalId
+        - hospitalName
+        - hospitalLocation
+        - skuName
+        - category
+        - quantityNeeded
+        - unit
+        - urgency
+        - status
+        - isPriority
+        - createdAt
+        - updatedAt
+
+    CreateCrisisRequestBody:
+      type: object
+      properties:
+        skuName:
+          type: string
+        category:
+          type: string
+        quantityNeeded:
+          type: number
+        unit:
+          type: string
+        urgency:
+          type: string
+          enum: [critical, high, medium]
+        notes:
+          type: string
+        isPriority:
+          type: boolean
+      required:
+        - skuName
+        - category
+        - quantityNeeded
+        - unit
+        - urgency
+
+    UpdateCrisisStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, matched, confirmed, transfer_acknowledged, closed]
+        notes:
+          type: string
+      required:
+        - status
+
+    CrisisMatch:
+      type: object
+      properties:
+        requestId:
+          type: integer
+        surplusId:
+          type: integer
+        skuName:
+          type: string
+        requestingHospital:
+          type: string
+        supplyingHospital:
+          type: string
+        quantityNeeded:
+          type: number
+        quantityAvailable:
+          type: number
+        unit:
+          type: string
+        matchScore:
+          type: number
+        urgency:
+          type: string
+          enum: [critical, high, medium]
+      required:
+        - requestId
+        - surplusId
+        - skuName
+        - requestingHospital
+        - supplyingHospital
+        - quantityNeeded
+        - quantityAvailable
+        - unit
+        - matchScore
+        - urgency
+
+    CrisisModeStatus:
+      type: object
+      properties:
+        active:
+          type: boolean
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        activatedBy:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+      required:
+        - active
+
+    ToggleCrisisModeBody:
+      type: object
+      properties:
+        active:
+          type: boolean
+        reason:
+          type: string
+      required:
+        - active
