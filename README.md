@@ -41,7 +41,8 @@ medstock/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 16+ 
+
+- Node.js 16+
 - pnpm
 
 ### Installation
@@ -74,7 +75,9 @@ pnpm lint
 ## 📦 Core Packages
 
 ### API Server (`artifacts/api-server`)
+
 REST API server handling:
+
 - Hospital and department management
 - Inventory tracking
 - Stock movements and transactions
@@ -83,7 +86,9 @@ REST API server handling:
 - Expiry batch management
 
 ### Frontend (`artifacts/medstock-ai`)
+
 Web application features:
+
 - Dashboard with key metrics
 - Inventory management interface
 - Alert management system
@@ -93,7 +98,9 @@ Web application features:
 - Settings and configuration
 
 ### Database (`lib/db`)
+
 Schema definitions for:
+
 - Hospitals and departments
 - SKUs and inventory items
 - Stock movements
@@ -104,17 +111,20 @@ Schema definitions for:
 - Alerts
 
 ### API Client (`lib/api-client-react`)
+
 Typed React hooks and utilities for API communication
 
 ## 📚 API Documentation
 
 API specifications are defined in OpenAPI format at `lib/api-spec/openapi.yaml`. Generated client code and types are available in:
+
 - `lib/api-client-react/src/generated/` - React hooks
 - `lib/api-zod/src/generated/` - Zod schemas
 
 ## 🔌 Available Routes
 
 Key API endpoints:
+
 - `/health` - Health check
 - `/hospitals` - Hospital management
 - `/departments` - Department management
@@ -142,7 +152,21 @@ Key API endpoints:
 
 ## 📄 License
 
-This project is part of the MedStock initiative.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+```
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
 
 ## 📧 Support
 
